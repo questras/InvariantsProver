@@ -9,30 +9,94 @@
 </head>
 
 <body>
-    <div class="container color-theme">
+    <div class="container light-theme">
         <!-- Menu bar -->
         <div class="menu-bar">
-            Lorem Ipsum
+            <button class="menu-button">Run</button>
+            <button class="menu-button">Upload</button>
+            <button class="menu-button">New</button>
+            <button class="menu-button">Delete</button>
+            <button class="menu-button">Download</button>
+            <button class="menu-button">Info</button>
         </div>
 
         <!-- File selection dialog -->
         <div class="file-selection-dialog">
-            Lorem Ipsum
+            <div class="file-list">
+                <button class="file">main.c</button>
+                <button class="file">hash.c</button>
+                <button class="file">longname.c</button>
+                <button class="file">longname.c</button>
+                <button class="file">veryverylongname.c</button>
+                <button class="file">veryextraultraveryverylongnameveryextraultraveryverylongnameveryextraultraveryverylongnameveryextraultraveryverylongnameveryextraultraveryverylongname.c</button>
+            </div>
         </div>
 
         <!-- Program code -->
         <div class="program-code-container">
-            <textarea class="code" wrap="off" placeholder="write some code..."></textarea>
+            <div class="program-name">main.c</div>
+            <textarea class="code" wrap="off" placeholder="Code goes here...">
+/*@ requires 0 <= n && \valid(a+(0..n-1));
+assigns \nothing;
+ensures \result == -1 ==> (\forall integer i; 0<= i < n ==> a[i] != v);
+ensures 0 <= \result < n ==> a[\result] == v;
+ensures -1 <= \result < n;
+*/
+int find(int n, const int a[], int v)
+{
+    int i;
+
+    for (i=0; i < n; i++) {
+    if (a[i] == v) {
+        return i;
+    }
+    }
+
+    return -1;
+}
+            </textarea>
         </div>
 
         <!-- Program elements -->
         <div class="program-elements-container">
-            Lorem Ipsum
+            <div class="program-name">main.c</div>
+            <textarea wrap="off" class="program-elements" readonly>
+/*@ requires 0 <= n && \valid(a+(0..n-1));
+assigns \nothing;
+ensures \result == -1 ==> (\forall integer i; 0<= i < n ==> a[i] != v);
+ensures 0 <= \result < n ==> a[\result] == v;
+ensures -1 <= \result < n;
+*/
+int find(int n, const int a[], int v)
+{
+    int i;
+
+    /*@ loop invariant 0 <= i <= n;
+        loop invariant \forall integer j; 0 <= j < i ==> a[j] != v;
+        loop assigns i;
+        loop variant n - i; */
+    for (i=0; i < n; i++) {
+    if (a[i] == v) {
+        return i;
+    }
+    }
+
+    return -1;
+}
+            </textarea>
         </div>
 
         <!-- Tab data -->
         <div class="tab-data-container">
-            Lorem Ipsum
+            <div class="tabs">
+                <button class="tab tab-active">tab1</button>
+                <button class="tab">tab1</button>
+                <button class="tab">tab1</button>
+                <button class="tab">tab1</button>
+            </div>
+            <div class="tab-data">
+                Lorem ipsum
+            </div>
         </div>
     </div>
 
