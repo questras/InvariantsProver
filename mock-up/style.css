@@ -1,16 +1,15 @@
+* {
+    -moz-box-sizing: border-box; 
+    -webkit-box-sizing: border-box; 
+     box-sizing: border-box; 
+}
+
 .light-theme {
-    --font-color: #212121;
-    --menu-bar-background-color: #cfcece;
+    --font-color: #000000;
+    --background-color: #ffffff;
+    --hover-color: #c2c2c2;
 
-    --file-selection-background-color: #cfcece;
-    --file-list-backround-color: #ffffff;
-    --file-even-background-color: #E0E0E0;
-    --file-odd-background-color: #BDBDBD;
-    --file-hover-background-color: #9E9E9E;
-
-    --program-elements-background-color: #cfcece;
-
-    --tab-data-background-color: #cfcece;
+    --container-border: 3px solid #000000;
 }
 
 .dark-theme {
@@ -34,148 +33,140 @@ html, body {
     display: grid;
     grid-template-columns: repeat(6, 1fr) repeat(6, 1fr);
 
-    background-color: var(--menu-bar-background-color);
-    border: 1px solid black;
+    background-color: var(--background-color);
+    border: var(--container-border);
 }
 
 .menu-button {
     display: flex;
     justify-content: center;
-    align-content: center;
     flex-direction: column;
     text-align: center;
+    text-decoration: none;
 
-    border: 1px solid black;
     background-color: white;
     cursor: pointer;
+
+    /* Set only right border. */
+    border: none;
+    border-right: 1px solid black;
 }
 
 .menu-button:hover {
-    background-color: #9E9E9E;
+    background-color: var(--hover-color);
 }
 
 .file-selection-dialog {
     grid-area: fileselection;
-    position: relative;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
+
+    overflow: auto;
 
     background-color: var(--file-selection-background-color);
-    /* border: 1px solid black; */
-}
-
-.file-list {
-    height: 95%;
-    width: 80%;
-    overflow: auto;
-    background-color: var(--file-list-backround-color);
-    border: 3px solid black;
-    position: absolute;
+    border: var(--container-border);
 }
 
 .file {
-    padding-top: 5%;
-    padding-bottom: 5%;
+    padding: 5%;
     min-width: 100%;
-
     text-decoration: none;
     cursor: pointer;
 
+    background-color: var(--background-color);
+
+    border: none;
     border-top: 1px dashed black;
     border-bottom: 1px dashed black;
-    border-left: none;
-    border-right: none;
-    background-color: white;
 }
 
 .file:hover {
-    background-color: lightgray;
+    background-color: var(--hover-color);
 }
 
 .program-code-container {
     grid-area: programcode;
-    background-color: #cfcece;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    background-color: var(--background-color);
     position: relative;
+
+    border: var(--container-border);
 }
 
 .code {
     overflow: auto;
-    font-size: large;
+    outline: none;
     resize: none;
-    width: 95%;
-    height: 90%;
-    border: 3px solid black;
+    
+    width: 100%;
+    height: 100%;
+    margin: none;
+    font-size: large;
+    background-color: var(--background-color);
 }
 
 .program-elements-container {
     grid-area: programelements;
-    background-color: var(--program-elements-background-color);
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
     position: relative;
+
+    background-color: var(--background-color);
+    border: var(--container-border);
 }
 
 .program-name {
     overflow: auto;
-    font-size: large;
-    width: 95%;
+    
+    width: 100%;
     height: 5%;
-    border: 3px solid black;
-    background-color: white;
+
+    font-size: large;
+    border-bottom: var(--container-border);
+    background-color: var(--background-color);
+    padding-left: 2%;
+    padding-right: 2%;
 }
 
 .program-elements {
     overflow: auto;
-    font-size: large;
+    outline: none;
     resize: none;
-    width: 95%;
-    height: 90%;
-    border: 3px solid black;
+    
+    font-size: large;    
+    width: 100%;
+    height: 95%;
 }
 
 .tab-data-container {
     grid-area: tabdatacontainer;
-    background-color: var(--tab-data-background-color);
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
     position: relative;
+
+    background-color: var(--tab-data-background-color);
+    border: var(--container-border);
 }
 
 .tabs {
-    width: 95%;
+    width: 100%;
     height: 10%;
+
     display: flex;
     flex-direction: row;
-    /* justify-content: center; */
-    /* align-items: center; */
     position: relative;
-    border: 3px solid black;
-    border-bottom: none;
-    background-color: white;
+
+    background-color: var(--background-color);
 }
 
 .tab {
-    width: 10%;
-    background-color: white;
+    min-width: 10%;
+    background-color: var(--background-color);
+    cursor: pointer;
+    font-size: small;
+
     border: 3px solid black;
     border-top: none;
     border-left: none;
-    cursor: pointer;
 }
 
 .tab:hover {
-    background-color: lightgray;
+    background-color: var(--hover-color);
 }
 
 .tab-active {
@@ -183,16 +174,16 @@ html, body {
 }
 
 .tab-active:hover {
-    background-color: white;
+    background-color: var(--background-color);
 }
 
 .tab-data {
-    width: 95%;
-    height: 80%;
-    background-color: white;
-    border: 3px solid black;
-    border-top: none;
+    width: 100%;
+    height: 90%;
+    overflow-y: auto;
 
+    background-color: var(--background-color);
+    padding: 1%;
 }
 
 .container {
