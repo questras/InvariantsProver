@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="style.css">
+    <title>InvariantsProver</title>
 </head>
 
 <body>
@@ -33,7 +34,7 @@
 
         <!-- Program code -->
         <div class="program-code-container">
-            <textarea class="code" wrap="off" placeholder="Code goes here...">
+            <textarea class="code" wrap="soft" placeholder="Code goes here...">
 /*@ requires 0 <= n && \valid(a+(0..n-1));
 assigns \nothing;
 ensures \result == -1 ==> (\forall integer i; 0<= i < n ==> a[i] != v);
@@ -57,8 +58,8 @@ int find(int n, const int a[], int v)
 
         <!-- Program elements -->
         <div class="program-elements-container">
-            <div class="program-name">main.c</div>
-            <textarea wrap="off" class="program-elements" readonly>
+            <div class="program-name">mainmainmainmainmainmain.c</div>
+            <textarea wrap="soft" class="program-elements" readonly>
 /*@ requires 0 <= n && \valid(a+(0..n-1));
 assigns \nothing;
 ensures \result == -1 ==> (\forall integer i; 0<= i < n ==> a[i] != v);
