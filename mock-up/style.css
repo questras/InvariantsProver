@@ -207,6 +207,10 @@ textarea {
         height: 20%;
     }
 
+    .program-elements {
+        height: 80%;
+    }
+
     .tabs {
         height: 15%;
     }
