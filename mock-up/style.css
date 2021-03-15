@@ -55,7 +55,7 @@ textarea {
 }
 
 .file-selection-dialog {
-    grid-area: fileselection;
+    grid-area: files;
     display: flex;
     flex-direction: column;
     overflow: auto;
@@ -79,7 +79,7 @@ textarea {
 }
 
 .program-code-container {
-    grid-area: programcode;
+    grid-area: code;
     background-color: var(--background-color);
     position: relative;
     border: var(--container-border);
@@ -98,7 +98,7 @@ textarea {
 }
 
 .program-elements-container {
-    grid-area: programelements;
+    grid-area: elements;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -129,7 +129,7 @@ textarea {
 }
 
 .tab-data-container {
-    grid-area: tabdatacontainer;
+    grid-area: tabs;
     position: relative;
     background-color: var(--tab-data-background-color);
     border: var(--container-border);
@@ -182,13 +182,13 @@ textarea {
     grid-template-rows: repeat(10, 1fr);
     grid-template-areas: 
         "menu menu menu menu menu menu menu"
-        "fileselection programcode programcode programcode programcode programelements programelements"
-        "fileselection programcode programcode programcode programcode programelements programelements"
-        "fileselection programcode programcode programcode programcode programelements programelements"
-        "fileselection programcode programcode programcode programcode programelements programelements"
-        "fileselection programcode programcode programcode programcode programelements programelements"
-        "fileselection programcode programcode programcode programcode programelements programelements"
-        "fileselection tabdatacontainer tabdatacontainer tabdatacontainer tabdatacontainer tabdatacontainer tabdatacontainer"
-        "fileselection tabdatacontainer tabdatacontainer tabdatacontainer tabdatacontainer tabdatacontainer tabdatacontainer"
-        "fileselection tabdatacontainer tabdatacontainer tabdatacontainer tabdatacontainer tabdatacontainer tabdatacontainer";
+        "files code code code code elements elements"
+        "files code code code code elements elements"
+        "files code code code code elements elements"
+        "files code code code code elements elements"
+        "files code code code code elements elements"
+        "files code code code code elements elements"
+        "files tabs tabs tabs tabs tabs tabs"
+        "files tabs tabs tabs tabs tabs tabs"
+        "files tabs tabs tabs tabs tabs tabs";
 }
