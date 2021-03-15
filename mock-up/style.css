@@ -192,3 +192,31 @@ textarea {
         "files tabs tabs tabs tabs tabs tabs"
         "files tabs tabs tabs tabs tabs tabs";
 }
+
+@media only screen and (max-width: 768px) {
+    .container {
+        grid-template-areas: 
+            "menu menu menu menu menu menu menu"
+            "files files files files files files files"
+            "code code code code code code code"
+            "code code code code code code code"
+            "code code code code code code code"
+            "code code code code code code code"
+            "elements elements elements elements elements elements elements"
+            "elements elements elements elements elements elements elements"
+            "tabs tabs tabs tabs tabs tabs tabs"
+            "tabs tabs tabs tabs tabs tabs tabs";
+    }
+
+    .program-name {
+        height: 20%;
+    }
+
+    .tabs {
+        height: 15%;
+    }
+
+    .tab-data {
+        height: 85%;
+    }
+}
