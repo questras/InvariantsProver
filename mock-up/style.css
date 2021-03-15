@@ -19,8 +19,8 @@
     color: var(--font-color);
 }
 
-html, body {
-    height: 100%;
+body {
+    /* Remove implicit margin for body. */
     margin: 0;
 }
 
