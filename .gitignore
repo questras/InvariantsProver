@@ -1,6 +1,6 @@
 
-# Created by https://www.toptal.com/developers/gitignore/api/python,django
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,django
+# Created by https://www.toptal.com/developers/gitignore/api/python,vscode,django
+# Edit at https://www.toptal.com/developers/gitignore?templates=python,vscode,django
 
 ### Django ###
 *.log
@@ -32,8 +32,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -106,6 +104,9 @@ ipython_config.py
 #   install all needed dependencies.
 #Pipfile.lock
 
+# poetry
+#poetry.lock
+
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow
 __pypackages__/
 
@@ -117,8 +118,9 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
-.venv
+# .env
+.env/
+.venv/
 env/
 venv/
 ENV/
@@ -147,8 +149,13 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
+# operating system-related files
+*.DS_Store #file properties cache/storage on macOS
+Thumbs.db #thumbnail cache on Windows
+
 # profiling data
 .prof
+
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -189,6 +196,8 @@ dmypy.json
 #   having no cross-platform support, pipenv may install dependencies that don't work, or not
 #   install all needed dependencies.
 
+# poetry
+
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow
 
 # Celery stuff
@@ -196,6 +205,7 @@ dmypy.json
 # SageMath parsed files
 
 # Environments
+# .env
 
 # Spyder project settings
 
@@ -209,8 +219,18 @@ dmypy.json
 
 # pytype static type analyzer
 
+# operating system-related files
+
 # profiling data
 
-# End of https://www.toptal.com/developers/gitignore/api/python,django
 
-.idea
+### vscode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# End of https://www.toptal.com/developers/gitignore/api/python,vscode,django
+
