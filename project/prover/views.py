@@ -1,3 +1,10 @@
-from django.shortcuts import render
+from typing import Any, Dict
 
-# Create your views here.
+from django.views.generic import TemplateView
+
+
+class MainView(TemplateView):
+    template_name = 'main.html'
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        return super().get_context_data(**kwargs)
