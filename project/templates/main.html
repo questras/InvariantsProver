@@ -26,10 +26,22 @@
 
         <!-- File selection dialog -->
         <div class="file-selection-dialog">
-            <button class="file">main.c</button>
-            <button class="file">hash.c</button>
-            <button class="file">vector.c</button>
-            <button class="file">matrix.c</button>
+            {% if current_dir %}
+                <a href="{% url 'main' %}?dir={{ current_dir.parent_dir.pk }}">
+                    <button>Go Back</button>
+                </a>
+            {% endif %}
+            
+            {% for directory in directories %}
+                <a href="{% url 'main' %}?dir={{ directory.pk }}">
+                    <button class="file" ><--dir-->{{ directory.name }}</button>
+                </a>
+                
+            {% endfor %}
+
+            {% for file in files %}
+                <button class="file">{{ file.name }}</button>
+            {% endfor %}
         </div>
 
         <!-- Program code -->
