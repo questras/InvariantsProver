@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-# todo:
+# TODO:
 # on_delete: maybe something to set validity flags
 # doesnt have to be exactly like in task description
 # check whether values in enums are the only ones available
@@ -19,13 +19,14 @@ class Directory(models.Model):
     description = models.TextField(null=True, blank=True)
     creation_date = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    parent_dir = models.ForeignKey(
-        Directory,
-        on_delete=models.CASCADE,
-        null=True
-    )
-    # False if the directory was deleted
+    # False if the directory was deleted:
     availability_flag = models.BooleanField(default=True)
+    validity_flag = models.BooleanField(default=True)
+    parent_dir = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True   # In main directory if null=True
+    )
 
 
 class File(models.Model):
@@ -36,23 +37,14 @@ class File(models.Model):
     description = models.TextField(null=True, blank=True)
     creation_date = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    # False if the file was deleted
+    availability_flag = models.BooleanField(default=True)
+    validity_flag = models.BooleanField(default=True)
     parent_dir = models.ForeignKey(
         Directory,
         on_delete=models.CASCADE,
-        null=True
+        null=True   # In main directory if null=True
     )
-    # False if the file was deleted
-    availability_flag = models.BooleanField(default=True)
-
-
-class SectionCategoryEnum(Enum):
-    PROCEDURE = 'procedure'
-    PROPERTY = 'property'
-    LEMMA = 'lemma'
-    ASSERTION = 'assertion'
-    INVARIANT = 'invariant'
-    PRECONDITION = 'precondition'
-    POSTCONDITION = 'postcondition'
 
 
 class SectionCategory(models.Model):
@@ -62,28 +54,20 @@ class SectionCategory(models.Model):
     are: procedure, property, lemma, assertion, invariant, 
     precondition, postcondition"""
 
+    class SectionCategoryEnum(Enum):
+        PROCEDURE = 'procedure'
+        PROPERTY = 'property'
+        LEMMA = 'lemma'
+        ASSERTION = 'assertion'
+        INVARIANT = 'invariant'
+        PRECONDITION = 'precondition'
+        POSTCONDITION = 'postcondition'
+
     name = models.CharField(
         max_length=256,
         choices=[(tag, tag.value) for tag in SectionCategoryEnum]
     )
-
-
-class SectionStatusEnum(Enum):
-    PROVED = 'proved'
-    INVALID = 'invalid'
-    COUNTEREXAMPLE = 'counterexample'
-    UNCHECKED = 'unchecked'
-
-
-class SectionStatus(models.Model):
-    """Section status - is an entity that defines the status
-    of a section; example status' are: proved, invalid, 
-    counterexample, unchecked."""
-
-    name = models.CharField(
-        max_length=256,
-        choices=[(tag, tag.value) for tag in SectionStatusEnum]
-    )
+    creation_date = models.DateTimeField(auto_now=True)
 
 
 class SectionStatusData(models.Model):
@@ -93,6 +77,28 @@ class SectionStatusData(models.Model):
 
     data = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    creation_date = models.DateTimeField(auto_now=True)
+    validity_flag = models.BooleanField(default=True)
+
+
+class SectionStatus(models.Model):
+    """Section status - is an entity that defines the status
+    of a section; example status' are: proved, invalid, 
+    counterexample, unchecked."""
+
+    class SectionStatusEnum(Enum):
+        PROVED = 'proved'
+        INVALID = 'invalid'
+        COUNTEREXAMPLE = 'counterexample'
+        UNCHECKED = 'unchecked'
+
+    name = models.CharField(
+        max_length=256,
+        choices=[(tag, tag.value) for tag in SectionStatusEnum]
+    )
+    data = models.ForeignKey(SectionStatusData, on_delete=models.CASCADE)
+    creation_date = models.DateTimeField(auto_now=True)
+    validity_flag = models.BooleanField(default=True)
 
 
 class FileSection(models.Model):
@@ -105,5 +111,10 @@ class FileSection(models.Model):
     creation_date = models.DateTimeField(auto_now=True)
     category = models.ForeignKey(SectionCategory, on_delete=models.CASCADE)
     status = models.ForeignKey(SectionStatus, on_delete=models.CASCADE)
-    status_data = models.ForeignKey(
-        SectionStatusData, on_delete=models.CASCADE)
+    validity_flag = models.BooleanField(default=True)
+    # A section can be a subsection of some parent section.
+    parent_section = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True
+    )
