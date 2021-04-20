@@ -7,7 +7,6 @@ User = get_user_model()
 
 
 # TODO:
-# on_delete: maybe something to set validity flags
 # doesnt have to be exactly like in task description
 # check whether values in enums are the only ones available
 
@@ -25,8 +24,12 @@ class Directory(models.Model):
     parent_dir = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
-        null=True   # In main directory if null=True
+        null=True,   # In main directory if null=True
+        blank=True
     )
+
+    def __str__(self) -> str:
+        return f'{self.name} (dir) by {self.owner.username}'
 
 
 class File(models.Model):
@@ -43,8 +46,12 @@ class File(models.Model):
     parent_dir = models.ForeignKey(
         Directory,
         on_delete=models.CASCADE,
-        null=True   # In main directory if null=True
+        null=True,   # In main directory if null=True
+        blank=True
     )
+
+    def __str__(self) -> str:
+        return f'{self.name} (file) by {self.owner.username}'
 
 
 class SectionCategory(models.Model):
@@ -69,16 +76,8 @@ class SectionCategory(models.Model):
     )
     creation_date = models.DateTimeField(auto_now=True)
 
-
-class SectionStatusData(models.Model):
-    """Section status - is an entity that defines data associated 
-    with the section status, e.g. the counterexample content, 
-    the name of the solver that proved validity (e.g. Z3, CVC4 etc.)."""
-
-    data = models.TextField()
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    creation_date = models.DateTimeField(auto_now=True)
-    validity_flag = models.BooleanField(default=True)
+    def __str__(self) -> str:
+        return f'{self.name}'
 
 
 class SectionStatus(models.Model):
@@ -96,9 +95,25 @@ class SectionStatus(models.Model):
         max_length=256,
         choices=[(tag, tag.value) for tag in SectionStatusEnum]
     )
-    data = models.ForeignKey(SectionStatusData, on_delete=models.CASCADE)
     creation_date = models.DateTimeField(auto_now=True)
     validity_flag = models.BooleanField(default=True)
+
+    def __str__(self) -> str:
+        return f'Section Status: {self.name}'
+
+
+class SectionStatusData(models.Model):
+    """Section status - is an entity that defines data associated 
+    with the section status, e.g. the counterexample content, 
+    the name of the solver that proved validity (e.g. Z3, CVC4 etc.)."""
+
+    data = models.TextField()
+    creation_date = models.DateTimeField(auto_now=True)
+    validity_flag = models.BooleanField(default=True)
+    status = models.ForeignKey(SectionStatus, on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return f'Status data to status: {self.status.name}'
 
 
 class FileSection(models.Model):
@@ -112,9 +127,14 @@ class FileSection(models.Model):
     category = models.ForeignKey(SectionCategory, on_delete=models.CASCADE)
     status = models.ForeignKey(SectionStatus, on_delete=models.CASCADE)
     validity_flag = models.BooleanField(default=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     # A section can be a subsection of some parent section.
     parent_section = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
-        null=True
+        null=True,
+        blank=True
     )
+
+    def __str__(self) -> str:
+        return f'Section {self.name}. Status: {self.status.name}'
