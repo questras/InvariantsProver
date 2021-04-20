@@ -121,6 +121,11 @@ class FileSection(models.Model):
     piece of code within a file or comments; 
     some file sections may contain subsections."""
 
+    file = models.ForeignKey(
+        File,
+        on_delete=models.CASCADE,
+        help_text='File, to which section relates.'
+    )
     name = models.CharField(max_length=256, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     creation_date = models.DateTimeField(auto_now=True)
