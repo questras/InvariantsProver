@@ -14,6 +14,7 @@ class MainView(TemplateView):
         ID in url query string, or None if no directory specified or
         query string is incorrect"""
 
+        directory = None
         if 'dir' in self.request.GET:
             try:
                 directory = Directory.objects.get(pk=self.request.GET['dir'])
