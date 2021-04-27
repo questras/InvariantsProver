@@ -49,6 +49,7 @@ class File(models.Model):
         null=True,   # In main directory if null=True
         blank=True
     )
+    file = models.FileField(upload_to='files')
 
     def __str__(self) -> str:
         return f'{self.name} (file) by {self.owner.username}'
