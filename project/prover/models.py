@@ -7,10 +7,6 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-# TODO:
-# doesnt have to be exactly like in task description
-# check whether values in enums are the only ones available
-
 class Entity(models.Model):
     """Base model for all entities in data model."""
 
@@ -43,8 +39,7 @@ class Directory(Entity):
         self.save()
 
     def __str__(self) -> str:
-        # TODO: remove id from str
-        return f'{self.id}. {self.name} (dir) by {self.owner.username}'
+        return self.name
 
 
 class File(Entity):
@@ -74,8 +69,7 @@ class File(Entity):
         return os.path.basename(self.uploaded_file.name)
 
     def __str__(self) -> str:
-        name = self.get_name()
-        return f'{name} (file) by {self.owner.username}'
+        return self.get_name()
 
 
 class SectionCategory(Entity):
