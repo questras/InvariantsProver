@@ -1,4 +1,5 @@
 from enum import Enum
+import os
 
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -10,17 +11,23 @@ User = get_user_model()
 # doesnt have to be exactly like in task description
 # check whether values in enums are the only ones available
 
-class Directory(models.Model):
+class Entity(models.Model):
+    """Base model for all entities in data model."""
+
+    validity_flag = models.BooleanField(default=True)
+    creation_date = models.DateTimeField(auto_now=True)
+
+
+class Directory(Entity):
     """Directory - is an entity that holds files and 
     other directories."""
 
     name = models.CharField(max_length=256)
     description = models.TextField(null=True, blank=True)
-    creation_date = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     # False if the directory was deleted:
     availability_flag = models.BooleanField(default=True)
-    validity_flag = models.BooleanField(default=True)
+
     parent_dir = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
@@ -28,34 +35,48 @@ class Directory(models.Model):
         blank=True
     )
 
+    def delete_by_user(self):
+        """If a user deletes a directory it is not removed from database,
+        its `availability_flag` changes."""
+
+        self.availability_flag = False
+
     def __str__(self) -> str:
-        return f'{self.name} (dir) by {self.owner.username}'
+        # TODO: remove id from str
+        return f'{self.id}. {self.name} (dir) by {self.owner.username}'
 
 
-class File(models.Model):
+class File(Entity):
     """File - is an entity that contains a source code, the source 
     code is divided into sections."""
 
-    name = models.CharField(max_length=256)
     description = models.TextField(null=True, blank=True)
-    creation_date = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     # False if the file was deleted
     availability_flag = models.BooleanField(default=True)
-    validity_flag = models.BooleanField(default=True)
     parent_dir = models.ForeignKey(
         Directory,
         on_delete=models.CASCADE,
         null=True,   # In main directory if null=True
         blank=True
     )
-    file = models.FileField(upload_to='files')
+    uploaded_file = models.FileField(upload_to='files')
+
+    def delete_by_user(self):
+        """If a user deletes a file it is not removed from database,
+        its `availability_flag` changes."""
+
+        self.availability_flag = False
+
+    def get_name(self) -> str:
+        return os.path.basename(self.uploaded_file.name)
 
     def __str__(self) -> str:
-        return f'{self.name} (file) by {self.owner.username}'
+        name = self.get_name()
+        return f'{name} (file) by {self.owner.username}'
 
 
-class SectionCategory(models.Model):
+class SectionCategory(Entity):
     """Section category - is an entity that defines the type 
     of a section; category defines the way the file section 
     is handled by the application. Possible section categories 
@@ -75,13 +96,12 @@ class SectionCategory(models.Model):
         max_length=256,
         choices=[(tag, tag.value) for tag in SectionCategoryEnum]
     )
-    creation_date = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         return f'{self.name}'
 
 
-class SectionStatus(models.Model):
+class SectionStatus(Entity):
     """Section status - is an entity that defines the status
     of a section; example status' are: proved, invalid, 
     counterexample, unchecked."""
@@ -96,43 +116,37 @@ class SectionStatus(models.Model):
         max_length=256,
         choices=[(tag, tag.value) for tag in SectionStatusEnum]
     )
-    creation_date = models.DateTimeField(auto_now=True)
-    validity_flag = models.BooleanField(default=True)
 
     def __str__(self) -> str:
         return f'Section Status: {self.name}'
 
 
-class SectionStatusData(models.Model):
+class SectionStatusData(Entity):
     """Section status - is an entity that defines data associated 
     with the section status, e.g. the counterexample content, 
     the name of the solver that proved validity (e.g. Z3, CVC4 etc.)."""
 
     data = models.TextField()
-    creation_date = models.DateTimeField(auto_now=True)
-    validity_flag = models.BooleanField(default=True)
     status = models.ForeignKey(SectionStatus, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
         return f'Status data to status: {self.status.name}'
 
 
-class FileSection(models.Model):
+class FileSection(Entity):
     """File section - is an entity that contains a meaningful 
     piece of code within a file or comments; 
     some file sections may contain subsections."""
 
-    file = models.ForeignKey(
+    related_file = models.ForeignKey(
         File,
         on_delete=models.CASCADE,
         help_text='File, to which section relates.'
     )
     name = models.CharField(max_length=256, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    creation_date = models.DateTimeField(auto_now=True)
     category = models.ForeignKey(SectionCategory, on_delete=models.CASCADE)
     status = models.ForeignKey(SectionStatus, on_delete=models.CASCADE)
-    validity_flag = models.BooleanField(default=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     # A section can be a subsection of some parent section.
     parent_section = models.ForeignKey(
