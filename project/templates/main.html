@@ -1,24 +1,16 @@
-{% load static %}
+{% extends 'base.html' %}
 
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="author" content="Michał Wiśniewski">
-
-    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
-    <title>InvariantsProver</title>
-</head>
-
-<body>
+{% block content %}
     <div class="container dark-theme">
         <!-- Menu bar -->
         <div class="menu-bar">
             <button class="menu-button">Run</button>
-            <button class="menu-button">New Directory</button>
-            <button class="menu-button">Upload File</button>
+            <button class="menu-button" onclick="location.href='{% url 'create-directory' %}'">
+                New Directory
+            </button>
+            <button class="menu-button"onclick="location.href='{% url 'create-file' %}'">
+                Upload File
+            </button>
             <button class="menu-button">Delete</button>
         </div>
 
@@ -26,27 +18,20 @@
         <div class="file-selection-dialog">
             {% if current_dir %}
                 <a href="{% url 'main' %}?dir={{ current_dir.parent_dir.pk }}">
-                    <button>Go Back</button>
+                    <button class="file">
+                        <i class="fa fa-arrow-left"></i>
+                        Go Back
+                    </button>
                 </a>
             {% endif %}
             
             {% for directory in directories %}
-                <a href="{% url 'main' %}?dir={{ directory.pk }}">
-                    <button class="file" ><--dir-->{{ directory.name }}</button>
-                </a>
-                
+                {% include '_directory.html' %}
             {% endfor %}
 
             {% for file in files %}
-                {% if current_dir %}
-                    <a href="{% url 'main' %}?dir={{ current_dir.pk }}&file={{ file.pk }}">
-                        <button class="file">{{ file.name }}</button>
-                    </a>
-                {% else %}
-                    <a href="{% url 'main' %}?file={{ file.pk }}">
-                        <button class="file">{{ file.name }}</button>
-                    </a>
-                {% endif %}
+                {% include '_file.html' %}
+
             {% endfor %}
         </div>
 
@@ -119,7 +104,4 @@ int find(int n, const int a[], int v)
             </div>
         </div>
     </div>
-
-</body>
-
-</html>
+{% endblock content %}

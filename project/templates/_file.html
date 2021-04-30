@@ -1,0 +1,15 @@
+{% if current_dir %}
+    <a href="{% url 'main' %}?dir={{ current_dir.pk }}&file={{ file.pk }}">
+        <button class="file">
+            <i class="fa fa-file"></i>
+            {{ file.get_name }}
+        </button>
+    </a>
+{% else %}
+    <a href="{% url 'main' %}?file={{ file.pk }}">
+        <button class="file">
+            <i class="fa fa-file"></i>
+            {{ file.get_name }}
+        </button>
+    </a>
+{% endif %}

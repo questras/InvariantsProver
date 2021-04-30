@@ -1,8 +1,11 @@
 from typing import Any, Dict
 
-from django.views.generic import TemplateView
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import TemplateView, CreateView
+from django.urls import reverse_lazy, reverse
 
 from .models import Directory, File
+from .forms import CreateDirectoryForm, CreateFileForm
 
 
 def get_file_content(file):
@@ -22,7 +25,11 @@ class MainView(TemplateView):
         if self.request.user.is_authenticated and phrase in self.request.GET:
             pk = self.request.GET[phrase]
             try:
-                obj = cls.objects.get(pk=pk, owner=self.request.user)
+                obj = cls.objects.get(
+                    pk=pk,
+                    owner=self.request.user,
+                    availability_flag=True
+                )
             except cls.DoesNotExist:
                 obj = None
             except ValueError:
@@ -34,7 +41,11 @@ class MainView(TemplateView):
     def _get_current_objects(self, cls, parent_dir: Directory = None):
         result = None
         if self.request.user.is_authenticated:
-            result = cls.objects.filter(parent_dir=parent_dir, owner=self.request.user)
+            result = cls.objects.filter(
+                parent_dir=parent_dir,
+                owner=self.request.user,
+                availability_flag=True
+            )
 
         return result
 
@@ -57,7 +68,7 @@ class MainView(TemplateView):
         files = self.get_files_to_show(current_directory)
 
         if current_file:
-            file_content = get_file_content(current_file.file)
+            file_content = get_file_content(current_file.uploaded_file)
         else:
             file_content = None
 
@@ -69,3 +80,82 @@ class MainView(TemplateView):
         context['file_content'] = file_content
 
         return context
+
+
+class FileBaseCreateView(CreateView):
+    """Base class for create view for file-based objects
+    like file or directory"""
+
+    success_url = reverse_lazy('main')
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class=form_class)
+        # Available parent dirs are only those that are user's.
+        form.fields['parent_dir'].queryset = \
+            Directory.objects.filter(
+                owner=self.request.user,
+                availability_flag=True
+        )
+
+        return form
+
+    def form_valid(self, form):
+        obj = form.save(commit=False)
+        obj.owner = self.request.user
+        obj.save()
+
+        return super().form_valid(form)
+
+
+class CreateFileView(FileBaseCreateView):
+    form_class = CreateFileForm
+    model = File
+    template_name = 'create_file.html'
+
+
+class CreateDirectoryView(FileBaseCreateView):
+    form_class = CreateDirectoryForm
+    model = Directory
+    template_name = 'create_directory.html'
+
+    def get_form_kwargs(self, *args, **kwargs):
+        form_kwargs = super().get_form_kwargs(*args, **kwargs)
+        form_kwargs['user'] = self.request.user
+
+        return form_kwargs
+
+
+def delete_directory_view(request, pk):
+    directory = get_object_or_404(
+        Directory,
+        pk=pk,
+        owner=request.user,
+        availability_flag=True
+    )
+
+    if request.method == 'POST':
+        directory.delete_by_user()
+        return redirect(reverse('main'))
+
+    context = {
+        'directory': directory,
+    }
+    return render(request, 'delete_directory.html', context)
+
+
+def delete_file_view(request, pk):
+    file = get_object_or_404(
+        File,
+        pk=pk,
+        owner=request.user,
+        availability_flag=True
+    )
+
+    if request.method == 'POST':
+        file.delete_by_user()
+        return redirect(reverse('main'))
+
+    context = {
+        'file': file,
+    }
+    return render(request, 'delete_file.html', context)
