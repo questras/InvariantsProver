@@ -125,6 +125,19 @@ class CreateDirectoryView(FileBaseCreateView):
         return form_kwargs
 
 
+def delete_directory_recurrent(directory: Directory):
+    """Deletes (sets as unavailable) given directory and
+    its contents recurrently."""
+
+    for lower_directory in directory.directory_set.all():
+        delete_directory_recurrent(lower_directory)
+
+    for lower_file in directory.file_set.all():
+        lower_file.delete_by_user()
+
+    directory.delete_by_user()
+
+
 def delete_directory_view(request, pk):
     directory = get_object_or_404(
         Directory,
@@ -134,7 +147,7 @@ def delete_directory_view(request, pk):
     )
 
     if request.method == 'POST':
-        directory.delete_by_user()
+        delete_directory_recurrent(directory)
         return redirect(reverse('main'))
 
     context = {
