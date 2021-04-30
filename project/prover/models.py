@@ -40,6 +40,7 @@ class Directory(Entity):
         its `availability_flag` changes."""
 
         self.availability_flag = False
+        self.save()
 
     def __str__(self) -> str:
         # TODO: remove id from str
@@ -67,6 +68,7 @@ class File(Entity):
         its `availability_flag` changes."""
 
         self.availability_flag = False
+        self.save()
 
     def get_name(self) -> str:
         return os.path.basename(self.uploaded_file.name)
