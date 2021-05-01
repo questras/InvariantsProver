@@ -79,18 +79,8 @@ class SectionCategory(Entity):
     are: procedure, property, lemma, assertion, invariant, 
     precondition, postcondition"""
 
-    class SectionCategoryEnum(Enum):
-        PROCEDURE = 'procedure'
-        PROPERTY = 'property'
-        LEMMA = 'lemma'
-        ASSERTION = 'assertion'
-        INVARIANT = 'invariant'
-        PRECONDITION = 'precondition'
-        POSTCONDITION = 'postcondition'
-
     name = models.CharField(
         max_length=256,
-        choices=[(tag, tag.value) for tag in SectionCategoryEnum]
     )
 
     def __str__(self) -> str:
@@ -102,15 +92,8 @@ class SectionStatus(Entity):
     of a section; example status' are: proved, invalid, 
     counterexample, unchecked."""
 
-    class SectionStatusEnum(Enum):
-        PROVED = 'proved'
-        INVALID = 'invalid'
-        COUNTEREXAMPLE = 'counterexample'
-        UNCHECKED = 'unchecked'
-
     name = models.CharField(
         max_length=256,
-        choices=[(tag, tag.value) for tag in SectionStatusEnum]
     )
 
     def __str__(self) -> str:
@@ -123,7 +106,11 @@ class SectionStatusData(Entity):
     the name of the solver that proved validity (e.g. Z3, CVC4 etc.)."""
 
     data = models.TextField()
-    status = models.ForeignKey(SectionStatus, on_delete=models.CASCADE)
+    status = models.ForeignKey(
+        SectionStatus, 
+        on_delete=models.CASCADE,
+        related_name='data_set'
+    )
 
     def __str__(self) -> str:
         return f'Status data to status: {self.status.name}'
@@ -143,7 +130,6 @@ class FileSection(Entity):
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(SectionCategory, on_delete=models.CASCADE)
     status = models.ForeignKey(SectionStatus, on_delete=models.CASCADE)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     # A section can be a subsection of some parent section.
     parent_section = models.ForeignKey(
         'self',
