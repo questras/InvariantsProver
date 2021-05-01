@@ -4,11 +4,16 @@
     <div class="container dark-theme">
         <!-- Menu bar -->
         <div class="menu-bar">
-            <button class="menu-button">Run</button>
+            <button class="menu-button" 
+            {% if current_file %}
+            onclick="location.href='{% url 'prove-file' current_file.pk %}'"
+            {% endif %}>
+                Run
+            </button>
             <button class="menu-button" onclick="location.href='{% url 'create-directory' %}'">
                 New Directory
             </button>
-            <button class="menu-button"onclick="location.href='{% url 'create-file' %}'">
+            <button class="menu-button" onclick="location.href='{% url 'create-file' %}'">
                 Upload File
             </button>
             <button class="menu-button">Delete</button>
@@ -46,31 +51,27 @@
 
         <!-- Program elements -->
         <div class="program-elements-container">
-            <div class="program-name">main.c</div>
-            <textarea wrap="soft" class="program-elements" readonly>
-/*@ requires 0 <= n && \valid(a+(0..n-1));
-assigns \nothing;
-ensures \result == -1 ==> (\forall integer i; 0<= i < n ==> a[i] != v);
-ensures 0 <= \result < n ==> a[\result] == v;
-ensures -1 <= \result < n;
-*/
-int find(int n, const int a[], int v)
-{
-    int i;
-
-    /*@ loop invariant 0 <= i <= n;
-        loop invariant \forall integer j; 0 <= j < i ==> a[j] != v;
-        loop assigns i;
-        loop variant n - i; */
-    for (i=0; i < n; i++) {
-    if (a[i] == v) {
-        return i;
-    }
-    }
-
-    return -1;
-}
-            </textarea>
+            <div class="program-name">{{ current_file.get_name }}</div>
+                <div class="program-elements">
+                {% for section in sections %}
+                    {% for data in section.status.data_set.all %}
+                        <div class="program-element"
+                        {% if section.status.name.lower == 'unknown' %}
+                        style="background-color: orange;"
+                        {% elif section.status.name.lower == 'valid' %}
+                        style="background-color: green;"
+                        {% else %}
+                        style="background-color: red;"
+                        {% endif %}
+                        title="{{ section.category.name }}"
+                        >
+***Status: {{ section.status.name }}***
+{{ data.data }}
+                        </div>
+                        <br>
+                    {% endfor %}
+                {% endfor %}
+                </div>
         </div>
 
         <!-- Tab data -->

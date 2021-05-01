@@ -116,13 +116,18 @@ textarea {
 
 .program-elements {
     overflow: auto;
-    outline: none;
-    resize: none;
-    border: none;
     font-size: large;
     width: 100%;
     height: 90%;
     background-color: var(--background-color);
+}
+
+.program-element {
+    white-space: pre;
+    font-size: small;
+    color: black;
+    min-width: 100%;
+    overflow: auto;
 }
 
 .tab-data-container {

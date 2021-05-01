@@ -1,11 +1,20 @@
 from typing import Any, Dict
+from django.db.models.fields import related
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView, CreateView
 from django.urls import reverse_lazy, reverse
 
-from .models import Directory, File
+from .models import (
+    Directory,
+    File,
+    FileSection,
+    SectionStatusData,
+    SectionCategory,
+    SectionStatus
+)
 from .forms import CreateDirectoryForm, CreateFileForm
+from .processes import get_frama_c_print
 
 
 def get_file_content(file):
@@ -52,6 +61,9 @@ class MainView(TemplateView):
     def get_current_file(self):
         return self._get_current_object(File, 'file')
 
+    def get_current_sections(self, file: File):
+        return FileSection.objects.filter(related_file=file, validity_flag=True)
+
     def get_current_directory(self):
         return self._get_current_object(Directory, 'dir')
 
@@ -66,6 +78,7 @@ class MainView(TemplateView):
         current_file = self.get_current_file()
         directories = self.get_directories_to_show(current_directory)
         files = self.get_files_to_show(current_directory)
+        sections = self.get_current_sections(current_file)
 
         if current_file:
             file_content = get_file_content(current_file.uploaded_file)
@@ -78,6 +91,7 @@ class MainView(TemplateView):
         context['current_dir'] = current_directory
         context['current_file'] = current_file
         context['file_content'] = file_content
+        context['sections'] = sections
 
         return context
 
@@ -95,7 +109,7 @@ class FileBaseCreateView(CreateView):
             Directory.objects.filter(
                 owner=self.request.user,
                 availability_flag=True
-        )
+            )
 
         return form
 
@@ -172,3 +186,35 @@ def delete_file_view(request, pk):
         'file': file,
     }
     return render(request, 'delete_file.html', context)
+
+
+def prove_file_view(request, pk):
+    file = get_object_or_404(
+        File,
+        pk=pk,
+        owner=request.user,
+        availability_flag=True
+    )
+
+    # Invalidate current sections.
+    current_sections = FileSection.objects.filter(related_file=file, validity_flag=True)
+    for section in current_sections:
+        section.validity_flag = False
+        section.save()
+
+    # Start new validation process for current file.
+    for section in get_frama_c_print(file.uploaded_file.path):
+        s_category = SectionCategory.objects.create(name=section.category)
+        s_status = SectionStatus.objects.create(name=section.status)
+        SectionStatusData.objects.create(
+            data=section.body,
+            status=s_status
+        )
+        FileSection.objects.create(
+            related_file=file,
+            category=s_category,
+            status=s_status
+        )
+
+    parent_dir_pk = file.parent_dir.pk if file.parent_dir else ''
+    return redirect(reverse('main') + f'?dir={parent_dir_pk}&file={file.pk}')
