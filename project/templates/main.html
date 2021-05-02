@@ -77,31 +77,16 @@
         <!-- Tab data -->
         <div class="tab-data-container">
             <div class="tabs">
-                <button class="tab tab-active">Information</button>
-                <button class="tab">Messages</button>
-                <button class="tab">Properties</button>
-                <button class="tab">Values</button>
+                <button id="ProversTab" class="tab tab-active" onclick="changeTab('Provers')">Provers</button>
+                <button id ="VCsTab" class="tab" onclick="changeTab('VCs')">VCs</button>
+                <button id="ResultTab" class="tab" onclick="changeTab('Result')">Result</button>
             </div>
-            <div class="tab-data">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum libero arcu, lobortis faucibus justo
-                malesuada, gravida gravida velit. Ut condimentum sodales ipsum, ut porta nunc efficitur et. Nulla non
-                lorem lacus. Sed nibh purus, venenatis ac nisi nec, egestas placerat sapien. Nunc imperdiet urna sed
-                velit pretium, in congue orci placerat. Aliquam rutrum ex eu convallis condimentum. Aliquam condimentum
-                leo ac dolor malesuada, scelerisque ornare nulla sagittis.
-                Proin convallis magna quis eros tristique, non feugiat nisl tincidunt. Curabitur ultrices nulla neque.
-                Fusce eu lorem a lorem egestas rutrum efficitur quis nulla. Vestibulum ante ipsum primis in faucibus
-                orci luctus et ultrices posuere cubilia curae; Donec eleifend tellus enim. Donec tempor ultricies
-                fermentum. Vestibulum id ante sem. Sed vitae lectus vitae tellus facilisis pharetra. Ut dignissim lacus
-                at tortor feugiat ultrices. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere
-                cubilia curae; Praesent ut lectus a erat varius hendrerit vel vitae massa. Suspendisse mattis libero in
-                est vestibulum malesuada eu in mi. Donec ut lorem sem.
-
-                Cras tristique mauris vel mauris venenatis, vitae convallis est luctus. Fusce sapien turpis, laoreet in
-                sapien a, dictum lobortis tortor. Cras nec aliquet sem. Suspendisse sit amet blandit urna. Vestibulum
-                viverra dui quis nisl hendrerit ullamcorper. Aenean at feugiat orci. Praesent sed ipsum felis. Nulla
-                vitae nunc sapien. Ut malesuada nunc eget eros viverra dapibus. Nulla molestie vel justo auctor
-                vestibulum. Vestibulum suscipit egestas turpis quis mattis. Duis tincidunt ut est ut condimentum. Donec
-                non odio luctus, finibus lectus in, iaculis mi. Cras vestibulum fringilla elementum.
+            <div id="ProversData" class="tab-data">
+            </div>
+            <div id="VCsData" class="tab-data" hidden>
+            </div>
+            <div id="ResultData" class="tab-data" hidden>
+{% if proving_result %}{{ proving_result.data }}{% endif %}
             </div>
         </div>
     </div>

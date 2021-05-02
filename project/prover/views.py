@@ -1,5 +1,4 @@
 from typing import Any, Dict
-from django.db.models.fields import related
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView, CreateView
@@ -11,7 +10,8 @@ from .models import (
     FileSection,
     SectionStatusData,
     SectionCategory,
-    SectionStatus
+    SectionStatus,
+    FileProvingResult
 )
 from .forms import CreateDirectoryForm, CreateFileForm
 from .processes import get_frama_c_print
@@ -82,8 +82,18 @@ class MainView(TemplateView):
 
         if current_file:
             file_content = get_file_content(current_file.uploaded_file)
+
+            proving_results = FileProvingResult.objects.filter(
+                related_file=current_file,
+                validity_flag=True
+            )
+            if len(proving_results) > 0:
+                proving_result = proving_results[0]
+            else:
+                proving_result = None
         else:
             file_content = None
+            proving_result = None
 
         context = super().get_context_data(**kwargs)
         context['directories'] = directories
@@ -92,6 +102,7 @@ class MainView(TemplateView):
         context['current_file'] = current_file
         context['file_content'] = file_content
         context['sections'] = sections
+        context['proving_result'] = proving_result
 
         return context
 
@@ -196,14 +207,19 @@ def prove_file_view(request, pk):
         availability_flag=True
     )
 
-    # Invalidate current sections.
+    # Invalidate current sections and result.
     current_sections = FileSection.objects.filter(related_file=file, validity_flag=True)
     for section in current_sections:
         section.validity_flag = False
         section.save()
+    current_results = FileProvingResult.objects.filter(related_file=file, validity_flag=True)
+    for result in current_results:
+        result.validity_flag = False
+        result.save()
 
     # Start new validation process for current file.
-    for section in get_frama_c_print(file.uploaded_file.path):
+    result_data, parsed_sections = get_frama_c_print(file.uploaded_file.path)
+    for section in parsed_sections:
         s_category = SectionCategory.objects.create(name=section.category)
         s_status = SectionStatus.objects.create(name=section.status)
         SectionStatusData.objects.create(
@@ -215,6 +231,10 @@ def prove_file_view(request, pk):
             category=s_category,
             status=s_status
         )
+    FileProvingResult.objects.create(
+        related_file=file,
+        data=result_data
+    )
 
     parent_dir_pk = file.parent_dir.pk if file.parent_dir else ''
     return redirect(reverse('main') + f'?dir={parent_dir_pk}&file={file.pk}')

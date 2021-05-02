@@ -172,6 +172,7 @@ textarea {
     overflow-y: auto;
     background-color: var(--background-color);
     padding: 1%;
+    white-space: pre;
 }
 
 .container {

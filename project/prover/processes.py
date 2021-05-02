@@ -1,5 +1,8 @@
+import os
 import subprocess
 from typing import List
+
+from django.conf import settings
 
 
 class FramaSection:
@@ -12,8 +15,8 @@ class FramaSection:
         return f'Category: {self.category}\nStatus: {self.status}\n{self.body}'
 
 
-def _frama_c_print_command(filepath: str):
-    return ['frama-c', '-wp', '-wp-print', filepath]
+def _frama_c_print_command(filepath: str, result_filepath: str):
+    return ['frama-c', '-wp', '-wp-print', '-wp-log', f'r:{result_filepath}', filepath]
 
 
 def _parse_frama_c_print(body: str) -> List[FramaSection]:
@@ -48,11 +51,15 @@ def _parse_frama_c_print(body: str) -> List[FramaSection]:
     return objs
 
 
-def get_frama_c_print(filepath: str) -> List[FramaSection]:
+def get_frama_c_print(filepath: str):
+    result_filepath = os.path.join(settings.BASE_DIR, 'files', 'temp', 'result.txt')
     result = subprocess.run(
-        _frama_c_print_command(filepath),
+        _frama_c_print_command(filepath, result_filepath),
         capture_output=True,
         text=True
     )
-    
-    return _parse_frama_c_print(result.stdout)
+    sections = _parse_frama_c_print(result.stdout)
+    with open(result_filepath, 'r') as f:
+        result_data = f.read()
+
+    return result_data, sections

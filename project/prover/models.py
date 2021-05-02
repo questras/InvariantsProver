@@ -27,7 +27,7 @@ class Directory(Entity):
     parent_dir = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
-        null=True,   # In main directory if null=True
+        null=True,  # In main directory if null=True
         blank=True
     )
 
@@ -53,7 +53,7 @@ class File(Entity):
     parent_dir = models.ForeignKey(
         Directory,
         on_delete=models.CASCADE,
-        null=True,   # In main directory if null=True
+        null=True,  # In main directory if null=True
         blank=True
     )
     uploaded_file = models.FileField(upload_to='files')
@@ -107,7 +107,7 @@ class SectionStatusData(Entity):
 
     data = models.TextField()
     status = models.ForeignKey(
-        SectionStatus, 
+        SectionStatus,
         on_delete=models.CASCADE,
         related_name='data_set'
     )
@@ -140,3 +140,15 @@ class FileSection(Entity):
 
     def __str__(self) -> str:
         return f'Section {self.name}. Status: {self.status.name}'
+
+
+class FileProvingResult(Entity):
+    related_file = models.ForeignKey(
+        File,
+        on_delete=models.CASCADE,
+        help_text='File, to which result relates.',
+    )
+    data = models.TextField()
+
+    def __str__(self) -> str:
+        return f'Result of {self.related_file.uploaded_file.name}'
