@@ -1,15 +1,13 @@
 {% if current_dir %}
-    <a href="{% url 'main' %}?dir={{ current_dir.pk }}&file={{ file.pk }}">
-        <button class="file">
-            <i class="fa fa-file"></i>
-            {{ file.get_name }}
-        </button>
-    </a>
+    <button onclick="location.href='{% url 'main' %}?dir={{ current_dir.pk }}&file={{ file.pk }}'" class="file">
+        <i class="fa fa-file"></i>
+        {{ file.get_name }}
+        <a class="delete-link" href="{% url 'delete-file' file.pk %}"><i class="fa fa-trash"></i></a>
+    </button>
 {% else %}
-    <a href="{% url 'main' %}?file={{ file.pk }}">
-        <button class="file">
-            <i class="fa fa-file"></i>
-            {{ file.get_name }}
-        </button>
-    </a>
+    <button onclick="location.href='{% url 'main' %}?file={{ file.pk }}'" class="file">
+        <i class="fa fa-file"></i>
+        {{ file.get_name }}
+        <a class="delete-link" href="{% url 'delete-file' file.pk %}"><i class="fa fa-trash"></i></a>
+    </button>
 {% endif %}

@@ -77,6 +77,10 @@ textarea {
     background-color: var(--hover-color);
 }
 
+.delete-link {
+    margin-left: 10%;
+}
+
 .program-code-container {
     grid-area: code;
     background-color: var(--background-color);
@@ -224,4 +228,9 @@ textarea {
     .tab-data {
         height: 85%;
     }
+}
+
+.form-container {
+    text-align: center;
+    color: black;
 }
