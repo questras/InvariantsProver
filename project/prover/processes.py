@@ -52,7 +52,14 @@ def _parse_frama_c_print(body: str) -> List[FramaSection]:
 
 
 def get_frama_c_print(filepath: str):
-    result_filepath = os.path.join(settings.BASE_DIR, 'files', 'temp', 'result.txt')
+    result_directory = os.path.join(settings.BASE_DIR, 'files', 'temp')
+    try:
+        os.mkdir(result_directory)
+    except FileExistsError:
+        # Directory already exists.
+        pass
+
+    result_filepath = os.path.join(result_directory, 'result.txt')
     result = subprocess.run(
         _frama_c_print_command(filepath, result_filepath),
         capture_output=True,
