@@ -10,6 +10,8 @@
 
     <!-- Icons library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <!-- Local -->
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
     <script src="{% static 'js/scripts.js' %}"></script>
@@ -17,7 +19,7 @@
     <title>InvariantsProver</title>
 </head>
 
-<body>
+<body onload="refreshCurrentDirectory();">
     {% block content %}
     
     {% endblock content %}

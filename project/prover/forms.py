@@ -18,12 +18,14 @@ class CreateDirectoryForm(ModelForm):
         name = cleaned_data.get('name')
         parent_dir = cleaned_data.get('parent_dir')
 
-        # Check if there is a directory with the same name in the same place.
+        # Check if there is an available directory with the same
+        # name in the same place.
         try:
             _ = Directory.objects.get(
                 name=name,
                 parent_dir=parent_dir,
-                owner=self.user
+                owner=self.user,
+                availability_flag=True
             )
             raise ValidationError('Such directory already exists.')
         except Directory.DoesNotExist:
