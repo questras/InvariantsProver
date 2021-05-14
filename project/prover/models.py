@@ -124,7 +124,8 @@ class FileSection(Entity):
     related_file = models.ForeignKey(
         File,
         on_delete=models.CASCADE,
-        help_text='File, to which section relates.'
+        help_text='File, to which section relates.',
+        related_name='sections'
     )
     name = models.CharField(max_length=256, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
@@ -147,6 +148,7 @@ class FileProvingResult(Entity):
         File,
         on_delete=models.CASCADE,
         help_text='File, to which result relates.',
+        related_name='results'
     )
     data = models.TextField()
 

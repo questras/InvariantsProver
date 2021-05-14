@@ -48,10 +48,28 @@ def file_content_view(request, pk):
         owner=request.user,
         availability_flag=True
     )
+    sections = file.sections.filter(validity_flag=True)
+    results = file.results.all()
+    if len(results) > 0:
+        result = results[0].data
+    else:
+        result = ''
+
+    sections_json = []
+    for section in sections:
+        sections_json.append(
+            {
+                'category': section.category.name,
+                'body': section.status.data_set.all()[0].data,
+                'status': section.status.name
+            }
+        )
 
     body = {
         'name': file.get_name(),
-        'body': get_file_content(file.uploaded_file)
+        'body': get_file_content(file.uploaded_file),
+        'sections': sections_json,
+        'result': result
     }
     return JsonResponse(body, safe=False)
 

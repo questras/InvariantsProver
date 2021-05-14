@@ -7,7 +7,7 @@ let forms = ["add-dir-form", "add-file-form"];
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 $.ajaxSetup({
-    headers: { 'X-CSRFToken': $.cookie('csrftoken') }
+    headers: {'X-CSRFToken': $.cookie('csrftoken')}
 });
 
 function getCurrentDirectoryOrEmptyString() {
@@ -19,7 +19,7 @@ function getCurrentDirectoryOrEmptyString() {
 }
 
 $(document).ready(function () {
-    $('#add-dir-form').submit(function(e) {
+    $('#add-dir-form').submit(function (e) {
         e.preventDefault();
 
         let data = $(this).serialize();
@@ -29,18 +29,18 @@ $(document).ready(function () {
             data: data,
             type: "POST",
             url: "add_dir/",
-            success: function(response) {
+            success: function (response) {
                 refreshCurrentDirectory();
                 showAddDirForm();
             },
-            error: function(e, x, r) {
+            error: function (e, x, r) {
                 alert("Error: " + e.responseText);
             }
         });
         return false;
     });
 
-    $('#add-file-form').submit(function(e) {
+    $('#add-file-form').submit(function (e) {
         e.preventDefault();
 
         let data = new FormData(this);
@@ -54,11 +54,11 @@ $(document).ready(function () {
             contentType: false,
             processData: false,
             headers: {'X-CSRFToken': $.cookie('csrftoken')},
-            success: function(response) {
+            success: function (response) {
                 refreshCurrentDirectory();
                 showAddFileForm();
             },
-            error: function(e, x, r) {
+            error: function (e, x, r) {
                 alert("Error: " + e.responseText);
             }
         });
@@ -130,11 +130,11 @@ function proveCurrentFileAndReload() {
         $.ajax({
             type: "POST",
             url: `prove/${currentFileId}/`,
-            success: function(response) {
+            success: function (response) {
                 reloadCurrentFileSections();
                 alert("Proving finished");
             },
-            error: function(e, x, r) {
+            error: function (e, x, r) {
                 alert("Error: " + e.responseText);
             }
         });
@@ -142,11 +142,11 @@ function proveCurrentFileAndReload() {
 }
 
 function reloadCurrentFileSections() {
-    console.log("File Sections updated.");
+    updateCodeEditorWithFile(currentFileId);
 }
 
 function hideAllMiddleScreenObjects() {
-    for(let obj of middleScreenObjects) {
+    for (let obj of middleScreenObjects) {
         document.getElementById(obj).hidden = true;
     }
     for (let form of forms) {
@@ -211,6 +211,45 @@ function getFileButton(buttonFileId, buttonFileName) {
     `
 }
 
+function getFileSection(status, category, body, id) {
+    let color;
+    let lowerCaseStatus = status.toLowerCase();
+    if (lowerCaseStatus === "unknown") {
+        color = "orange";
+    }
+    else if (lowerCaseStatus === "valid") {
+        color = "green";
+    }
+    else {
+        color = "red";
+    }
+
+    let lines = body.split('\n');
+    let header = lines.slice(0, 1);
+    body = lines.slice(1).join('\n');
+
+    let elementBodyId = `elementBody${id}`;
+
+    return `
+    <div class="program-element" style="background-color: ${color}; cursor: pointer;"
+    title="${category}" onclick="toggleProgramElement('${elementBodyId}');">
+***Status: ${status}***
+${header}
+    </div>
+   <div class="program-element" style="background-color: ${color}"
+    title="${category}" id="${elementBodyId}">
+${body}
+    </div>
+    <br>
+`
+}
+
+function toggleProgramElement(id) {
+    console.log("toggled");
+    let element = document.getElementById(id);
+    element.hidden = !element.hidden;
+}
+
 function populateFileNavigation(dirId) {
     let url = "current_files_and_dirs/";
     if (dirId >= 0) {
@@ -239,9 +278,14 @@ function populateFileNavigation(dirId) {
 function updateCodeEditorWithFile(fileId) {
     let editor = document.getElementById("program-code");
     let programName = document.getElementById("program-name");
+    let programSections = document.getElementById("program-elements");
+    let programResultData = document.getElementById("ResultData");
+
     if (fileId < 0) {
         editor.innerText = "";
         programName.innerText = "";
+        programSections.innerText = "";
+        programResultData.innerText = "";
     }
     else {
         let url = `file_content/${fileId}/`;
@@ -250,6 +294,18 @@ function updateCodeEditorWithFile(fileId) {
             // Usually innerHTML is unsafe, but its body goes to
             // textarea, so it is all handled as text.
             editor.innerHTML = response.data['body'];
+            programSections.innerText = "";
+            let i = 0;
+            for (let section of response.data['sections']) {
+                programSections.innerHTML += getFileSection(
+                    section['status'],
+                    section['category'],
+                    section['body'],
+                    i
+                );
+                i++;
+            }
+            programResultData.innerHTML = response.data['result'];
         })
     }
 }
