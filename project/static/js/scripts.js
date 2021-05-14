@@ -1,11 +1,70 @@
 let deleteMessage = 'Are you sure to delete this?';
 let currentFileId = -1; // DB id of currently displayed file.
 let directoryStack = []; // Stack of currently entered directories.
+let middleScreenObjects = ["program-code", "add-dir-form-container", "add-file-form-container"]
+let forms = ["add-dir-form", "add-file-form"];
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 
+function getCurrentDirectoryOrEmptyString() {
+    if (directoryStack.length > 0) {
+        return directoryStack[directoryStack.length - 1];
+    }
+
+    return "";
+}
+
+$(document).ready(function () {
+    $('#add-dir-form').submit(function(e) {
+        e.preventDefault();
+
+        let data = $(this).serialize();
+        data += `&parent_dir=${getCurrentDirectoryOrEmptyString()}`
+
+        $.ajax({
+            data: data,
+            type: "POST",
+            url: "add_dir/",
+            success: function(response) {
+                refreshCurrentDirectory();
+                showAddDirForm();
+            },
+            error: function(e, x, r) {
+                alert("Error: " + e.responseText);
+            }
+        });
+        return false;
+    });
+
+    $('#add-file-form').submit(function(e) {
+        e.preventDefault();
+
+        let data = new FormData(this);
+        data.append("parent_dir", getCurrentDirectoryOrEmptyString());
+
+        $.ajax({
+            data: data,
+            type: "POST",
+            url: "add_file/",
+            cache: false,
+            contentType: false,
+            processData: false,
+            headers: {'X-CSRFToken': $.cookie('csrftoken')},
+            success: function(response) {
+                refreshCurrentDirectory();
+                showAddFileForm();
+            },
+            error: function(e, x, r) {
+                alert("Error: " + e.responseText);
+            }
+        });
+        return false;
+    });
+});
+
 function enterFile(fileId) {
+    showProgramCode();
     if (fileId !== currentFileId) {
         currentFileId = fileId;
         updateCodeEditorWithFile(fileId);
@@ -60,6 +119,30 @@ function deleteFileAndRefresh(fileId) {
             }
         });
     }
+}
+
+function hideAllMiddleScreenObjects() {
+    for(let obj of middleScreenObjects) {
+        document.getElementById(obj).hidden = true;
+    }
+    for (let form of forms) {
+        document.getElementById(form).reset();
+    }
+}
+
+function showAddFileForm() {
+    hideAllMiddleScreenObjects();
+    document.getElementById("add-file-form-container").hidden = false;
+}
+
+function showAddDirForm() {
+    hideAllMiddleScreenObjects();
+    document.getElementById("add-dir-form-container").hidden = false;
+}
+
+function showProgramCode() {
+    hideAllMiddleScreenObjects();
+    document.getElementById("program-code").hidden = false;
 }
 
 // Return html structure of a button to go back to previous directory.

@@ -1,9 +1,14 @@
 from django.shortcuts import get_object_or_404, redirect
-from django.views.generic import TemplateView, CreateView
-from django.urls import reverse_lazy, reverse
+from django.views.generic import TemplateView
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse, HttpResponse, HttpResponseNotAllowed
+from django.http import (
+    JsonResponse,
+    HttpResponse,
+    HttpResponseNotAllowed,
+    HttpResponseBadRequest
+)
 
 from .models import (
     Directory,
@@ -24,6 +29,14 @@ def get_file_content(file):
     file.close()
 
     return content
+
+
+def parse_error_message(errors_json):
+    error_message = ''
+    for k in errors_json:
+        error_message += errors_json[k][0]['message'] + ' '
+
+    return error_message
 
 
 @login_required
@@ -71,51 +84,47 @@ def current_files_and_dirs_view(request):
 class MainView(TemplateView):
     template_name = 'main.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-# todo: add login required mixin
-class FileBaseCreateView(CreateView):
-    """Base class for create view for file-based objects
-    like file or directory"""
+        context['dir_form'] = CreateDirectoryForm()
+        context['file_form'] = CreateFileForm()
 
-    success_url = reverse_lazy('main')
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class=form_class)
-        # Available parent dirs are only those that are user's.
-        form.fields['parent_dir'].queryset = \
-            Directory.objects.filter(
-                owner=self.request.user,
-                availability_flag=True
-            )
-
-        return form
-
-    def form_valid(self, form):
-        obj = form.save(commit=False)
-        obj.owner = self.request.user
-        obj.save()
-
-        return super().form_valid(form)
+        return context
 
 
-# todo: add login required mixin
-class CreateFileView(FileBaseCreateView):
-    form_class = CreateFileForm
-    model = File
-    template_name = 'create_file.html'
+@login_required
+def add_file_view(request):
+    if request.method == 'POST':
+        form = CreateFileForm(data=request.POST, files=request.FILES)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
+
+            return HttpResponse()
+        else:
+            error_message = parse_error_message(form.errors.get_json_data())
+            return HttpResponseBadRequest(error_message)
+
+    return HttpResponseNotAllowed(permitted_methods=['POST'])
 
 
-# todo: add login required mixin
-class CreateDirectoryView(FileBaseCreateView):
-    form_class = CreateDirectoryForm
-    model = Directory
-    template_name = 'create_directory.html'
+@login_required
+def add_dir_view(request):
+    if request.method == 'POST':
+        form = CreateDirectoryForm(request.POST, request.user)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
 
-    def get_form_kwargs(self, *args, **kwargs):
-        form_kwargs = super().get_form_kwargs(*args, **kwargs)
-        form_kwargs['user'] = self.request.user
+            return HttpResponse()
+        else:
+            error_message = parse_error_message(form.errors.get_json_data())
+            return HttpResponseBadRequest(error_message)
 
-        return form_kwargs
+    return HttpResponseNotAllowed(permitted_methods=['POST'])
 
 
 def delete_directory_recurrent(directory: Directory):

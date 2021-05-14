@@ -10,11 +10,14 @@
             {% endif %}>
                 Run
             </button>
-            <button class="menu-button" onclick="location.href='{% url 'create-directory' %}'">
+            <button class="menu-button" onclick="showAddDirForm();">
                 New Directory
             </button>
-            <button class="menu-button" onclick="location.href='{% url 'create-file' %}'">
+            <button class="menu-button" onclick="showAddFileForm();">
                 Upload File
+            </button>
+            <button class="menu-button" onclick="showProgramCode();">
+                Show Code
             </button>
         </div>
 
@@ -24,8 +27,41 @@
 
         <!-- Program code -->
         <div class="program-code-container">
+            <!-- Textarea for code -->
             <textarea class="code" id="program-code" wrap="soft" placeholder="Code goes here...">
             </textarea>
+            <!-- Form to add a directory, hidden by default -->
+            <div id="add-dir-form-container" class="form-container" hidden>
+                <h2>Add a directory</h2>
+                <form id="add-dir-form" method="post" action="">
+                    {% csrf_token %}
+                    <p>
+                        {{ dir_form.name.label }}:
+                        {{ dir_form.name }}
+                    </p>
+                    <p>
+                        {{ dir_form.description.label }}:
+                        {{ dir_form.description }}
+                    </p>
+                    <input type="submit" value="Add">
+                </form>
+            </div>
+            <!-- Form to add a file, hidden by default -->
+            <div id="add-file-form-container" class="form-container" hidden>
+                <h2>Add a file</h2>
+                <form id="add-file-form" method="post" >
+                    {% csrf_token %}
+                    <p>
+                        {{ file_form.uploaded_file.label }}:
+                        {{ file_form.uploaded_file }}
+                    </p>
+                    <p>
+                        {{ file_form.description.label }}:
+                        {{ file_form.description }}
+                    </p>
+                    <input type="submit" value="Add">
+                </form>
+            </div>
         </div>
 
         <!-- Program elements -->
