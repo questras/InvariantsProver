@@ -80,8 +80,7 @@ def current_files_and_dirs_view(request):
     return JsonResponse(data, safe=False)
 
 
-# todo: add login required mixin
-class MainView(TemplateView):
+class MainView(LoginRequiredMixin, TemplateView):
     template_name = 'main.html'
 
     def get_context_data(self, **kwargs):
