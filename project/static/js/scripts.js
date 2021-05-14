@@ -6,6 +6,9 @@ let forms = ["add-dir-form", "add-file-form"];
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+$.ajaxSetup({
+    headers: { 'X-CSRFToken': $.cookie('csrftoken') }
+});
 
 function getCurrentDirectoryOrEmptyString() {
     if (directoryStack.length > 0) {
@@ -121,6 +124,27 @@ function deleteFileAndRefresh(fileId) {
     }
 }
 
+// Run proving process for current file and reload code editor and sections.
+function proveCurrentFileAndReload() {
+    if (currentFileId >= 0) {
+        $.ajax({
+            type: "POST",
+            url: `prove/${currentFileId}/`,
+            success: function(response) {
+                reloadCurrentFileSections();
+                alert("Proving finished");
+            },
+            error: function(e, x, r) {
+                alert("Error: " + e.responseText);
+            }
+        });
+    }
+}
+
+function reloadCurrentFileSections() {
+    console.log("File Sections updated.");
+}
+
 function hideAllMiddleScreenObjects() {
     for(let obj of middleScreenObjects) {
         document.getElementById(obj).hidden = true;
@@ -214,12 +238,15 @@ function populateFileNavigation(dirId) {
 
 function updateCodeEditorWithFile(fileId) {
     let editor = document.getElementById("program-code");
+    let programName = document.getElementById("program-name");
     if (fileId < 0) {
         editor.innerText = "";
+        programName.innerText = "";
     }
     else {
         let url = `file_content/${fileId}/`;
         axios.get(url).then((response) => {
+            programName.innerText = response.data['name'];
             // Usually innerHTML is unsafe, but its body goes to
             // textarea, so it is all handled as text.
             editor.innerHTML = response.data['body'];

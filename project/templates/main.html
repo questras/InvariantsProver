@@ -4,10 +4,7 @@
     <div class="container dark-theme">
         <!-- Menu bar -->
         <div class="menu-bar">
-            <button class="menu-button" 
-            {% if current_file %}
-            onclick="location.href='{% url 'prove-file' current_file.pk %}'"
-            {% endif %}>
+            <button class="menu-button" onclick="proveCurrentFileAndReload();">
                 Run
             </button>
             <button class="menu-button" onclick="showAddDirForm();">
@@ -69,7 +66,7 @@
 
         <!-- Program elements -->
         <div class="program-elements-container">
-            <div class="program-name">{{ current_file.get_name }}</div>
+            <div class="program-name" id="program-name"></div>
                 <div class="program-elements">
                 {% for section in sections %}
                     {% for data in section.status.data_set.all %}

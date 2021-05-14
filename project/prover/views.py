@@ -9,6 +9,7 @@ from django.http import (
     HttpResponseNotAllowed,
     HttpResponseBadRequest
 )
+from django.views.decorators.http import require_http_methods
 
 from .models import (
     Directory,
@@ -49,6 +50,7 @@ def file_content_view(request, pk):
     )
 
     body = {
+        'name': file.get_name(),
         'body': get_file_content(file.uploaded_file)
     }
     return JsonResponse(body, safe=False)
@@ -171,6 +173,8 @@ def delete_file_view(request, pk):
     return HttpResponseNotAllowed(permitted_methods=['POST'])
 
 
+@login_required
+@require_http_methods(['POST'])
 def prove_file_view(request, pk):
     file = get_object_or_404(
         File,
@@ -208,5 +212,4 @@ def prove_file_view(request, pk):
         data=result_data
     )
 
-    parent_dir_pk = file.parent_dir.pk if file.parent_dir else ''
-    return redirect(reverse('main') + f'?dir={parent_dir_pk}&file={file.pk}')
+    return HttpResponse()
