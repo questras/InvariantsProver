@@ -132,7 +132,7 @@ def add_file_view(request):
 @login_required
 def add_dir_view(request):
     if request.method == 'POST':
-        form = CreateDirectoryForm(request.POST, request.user)
+        form = CreateDirectoryForm(request.POST, user=request.user)
         if form.is_valid():
             obj = form.save(commit=False)
             obj.owner = request.user
