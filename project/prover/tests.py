@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 
 from .models import (
     Entity,
@@ -24,6 +25,10 @@ def create_dummy_user(n: int):
     `n` identifier"""
 
     return User.objects.create_user(username=f'test{n}', password='test_password')
+
+
+def login_user(test_case, user):
+    test_case.client.login(username=user.username, password='test_password')
 
 
 class EntityModelTests(TestCase):
@@ -185,3 +190,153 @@ class CreateFileFormTests(TestCase):
         # No files are provided
         form = CreateFileForm(data)
         self.assertEqual(form.is_valid(), False)
+
+
+class FileContentViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = create_dummy_user(1)
+
+    def test_no_file_returns_404_code(self):
+        login_user(self, self.user)
+
+        url = reverse('file-content', args=(1,))
+        r = self.client.get(url)
+        self.assertEqual(r.status_code, 404)
+
+
+class CurrentFilesAndDirsViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = create_dummy_user(1)
+        self.directory = Directory.objects.create(
+            name='test-name',
+            owner=self.user
+        )
+        self.file = File.objects.create(
+            owner=self.user,
+            uploaded_file='test-file.txt',
+            parent_dir=self.directory
+        )
+
+    def test_request_without_arguments_returns_data_from_main_directory(self):
+        login_user(self, self.user)
+
+        url = reverse('current-files-and-dirs')
+        r = self.client.get(url)
+
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+
+        self.assertEqual(len(data['directories']), 1)
+        directory = data['directories'][0]
+        self.assertEqual(directory['id'], self.directory.id)
+        self.assertEqual(directory['name'], self.directory.name)
+
+        # File in setUp is not in main directory so it shouldn't be present here.
+        self.assertEqual(len(data['files']), 0)
+
+
+class MainViewTests(TestCase):
+    def setUp(self) -> None:
+        self.url = reverse('main')
+
+    def test_not_logged_user_is_redirected(self):
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, 302)
+
+
+class AddFileViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = create_dummy_user(1)
+        self.url = reverse('create-file')
+
+    def test_get_method_is_not_allowed(self):
+        login_user(self, self.user)
+
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, 405)
+
+
+class AddDirViewTests(TestCase):
+    def setUp(self) -> None:
+        self.url = reverse('create-directory')
+        self.user = create_dummy_user(1)
+        self.data = {
+            'name': 'test',
+            'description': 'test-desc'
+        }
+
+    def test_logged_user_can_add_directory(self):
+        login_user(self, self.user)
+
+        # No directories right now.
+        self.assertEqual(Directory.objects.all().count(), 0)
+
+        r = self.client.post(self.url, data=self.data)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(Directory.objects.all().count(), 1)
+
+
+class DeleteDirectoryViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = create_dummy_user(1)
+        self.directory = Directory.objects.create(
+            name='test-directory-1',
+            owner=self.user
+        )
+
+    def test_deleted_directory_has_availability_flag_set_to_false(self):
+        login_user(self, self.user)
+        url = reverse('delete-directory', args=(self.directory.id,))
+
+        # Before deletion.
+        self.assertEqual(Directory.objects.filter(availability_flag=True).count(), 1)
+        self.assertEqual(Directory.objects.filter(availability_flag=False).count(), 0)
+
+        self.client.post(url)
+
+        # After deletion.
+        self.assertEqual(Directory.objects.filter(availability_flag=True).count(), 0)
+        self.assertEqual(Directory.objects.filter(availability_flag=False).count(), 1)
+
+
+class DeleteFileViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = create_dummy_user(1)
+        self.file = File.objects.create(
+            owner=self.user
+        )
+
+    def test_deleted_file_has_availability_flag_set_to_false(self):
+        login_user(self, self.user)
+        url = reverse('delete-file', args=(self.file.id,))
+
+        # Before deletion.
+        self.assertEqual(File.objects.filter(availability_flag=True).count(), 1)
+        self.assertEqual(File.objects.filter(availability_flag=False).count(), 0)
+
+        self.client.post(url)
+
+        # After deletion.
+        self.assertEqual(File.objects.filter(availability_flag=True).count(), 0)
+        self.assertEqual(File.objects.filter(availability_flag=False).count(), 1)
+
+
+class ProveFileViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = create_dummy_user(1)
+
+    def test_proving_non_existing_file_returns_404(self):
+        login_user(self, self.user)
+        url = reverse('prove-file', args=(1,))
+
+        r = self.client.post(url)
+        self.assertEqual(r.status_code, 404)
+
+    def test_user_cannot_prove_somebody_else_file(self):
+        user2 = create_dummy_user(2)
+        not_owned_file = File.objects.create(owner=user2)
+        url = reverse('prove-file', args=(not_owned_file.pk,))
+
+        login_user(self, self.user)
+        r = self.client.post(url)
+        self.assertEqual(r.status_code, 404)
