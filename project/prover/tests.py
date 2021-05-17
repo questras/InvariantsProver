@@ -11,6 +11,10 @@ from .models import (
     FileSection,
     FileProvingResult
 )
+from .forms import (
+    CreateDirectoryForm,
+    CreateFileForm
+)
 
 User = get_user_model()
 
@@ -145,3 +149,39 @@ class FileProvingResultModelTests(TestCase):
 
         self.assertEqual(File.objects.all().count(), 0)
         self.assertEqual(FileProvingResult.objects.all().count(), 0)
+
+
+class CreateDirectoryFormTests(TestCase):
+    def setUp(self) -> None:
+        self.user = create_dummy_user(1)
+        self.directory = Directory.objects.create(
+            name='test-directory',
+            owner=self.user,
+            parent_dir=None
+        )
+
+    def test_form_is_invalid_when_trying_to_create_existing_dir(self):
+        """Form is invalid when user tries to create directory
+        with the same name, user and parent_dir as already existing dir."""
+
+        data = {
+            'name': 'test-directory',
+            'parent_dir': None
+        }
+        form = CreateDirectoryForm(data, user=self.user)
+        self.assertEqual(form.is_valid(), False)
+
+
+class CreateFileFormTests(TestCase):
+    def setUp(self) -> None:
+        self.user = create_dummy_user(1)
+
+    def test_form_is_invalid_without_uploaded_file(self):
+        data = {
+            'description': 'test-description',
+            'parent_dir': None
+        }
+
+        # No files are provided
+        form = CreateFileForm(data)
+        self.assertEqual(form.is_valid(), False)
