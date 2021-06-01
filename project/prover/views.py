@@ -1,8 +1,15 @@
-from typing import Any, Dict
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import TemplateView, CreateView
-from django.urls import reverse_lazy, reverse
+from django.shortcuts import get_object_or_404, redirect
+from django.views.generic import TemplateView
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import (
+    JsonResponse,
+    HttpResponse,
+    HttpResponseNotAllowed,
+    HttpResponseBadRequest
+)
+from django.views.decorators.http import require_http_methods
 
 from .models import (
     Directory,
@@ -25,129 +32,118 @@ def get_file_content(file):
     return content
 
 
-class MainView(TemplateView):
+def parse_error_message(errors_json):
+    error_message = ''
+    for k in errors_json:
+        error_message += errors_json[k][0]['message'] + ' '
+
+    return error_message
+
+
+@login_required
+def file_content_view(request, pk):
+    file = get_object_or_404(
+        File,
+        pk=pk,
+        owner=request.user,
+        availability_flag=True
+    )
+    sections = file.sections.filter(validity_flag=True)
+    results = file.results.all()
+    if len(results) > 0:
+        result = results[0].data
+    else:
+        result = ''
+
+    sections_json = []
+    for section in sections:
+        sections_json.append(
+            {
+                'category': section.category.name,
+                'body': section.status.data_set.all()[0].data,
+                'status': section.status.name
+            }
+        )
+
+    body = {
+        'name': file.get_name(),
+        'body': get_file_content(file.uploaded_file),
+        'sections': sections_json,
+        'result': result
+    }
+    return JsonResponse(body, safe=False)
+
+
+@login_required
+def current_files_and_dirs_view(request):
+    if current_directory_id := request.GET.get(key='dir', default=None):
+        current_directory = get_object_or_404(Directory, pk=current_directory_id)
+    else:
+        current_directory = None
+
+    directories = Directory.objects.filter(
+        parent_dir=current_directory,
+        owner=request.user,
+        availability_flag=True
+    )
+    files = File.objects.filter(
+        parent_dir=current_directory,
+        owner=request.user,
+        availability_flag=True
+    )
+
+    data = {
+        'directories': list(directories.values('id', 'name')),
+        'files': [{'id': f.id, 'name': f.get_name()} for f in files]
+    }
+
+    return JsonResponse(data, safe=False)
+
+
+class MainView(LoginRequiredMixin, TemplateView):
     template_name = 'main.html'
 
-    def _get_current_object(self, cls, phrase):
-        obj = None
-
-        if self.request.user.is_authenticated and phrase in self.request.GET:
-            pk = self.request.GET[phrase]
-            try:
-                obj = cls.objects.get(
-                    pk=pk,
-                    owner=self.request.user,
-                    availability_flag=True
-                )
-            except cls.DoesNotExist:
-                obj = None
-            except ValueError:
-                # Instead of ID, got something else.
-                obj = None
-
-        return obj
-
-    def _get_current_objects(self, cls, parent_dir: Directory = None):
-        result = None
-        if self.request.user.is_authenticated:
-            result = cls.objects.filter(
-                parent_dir=parent_dir,
-                owner=self.request.user,
-                availability_flag=True
-            )
-
-        return result
-
-    def get_current_file(self):
-        return self._get_current_object(File, 'file')
-
-    def get_current_sections(self, file: File):
-        return FileSection.objects.filter(related_file=file, validity_flag=True)
-
-    def get_current_directory(self):
-        return self._get_current_object(Directory, 'dir')
-
-    def get_directories_to_show(self, parent_dir: Directory = None):
-        return self._get_current_objects(Directory, parent_dir=parent_dir)
-
-    def get_files_to_show(self, parent_dir: Directory = None):
-        return self._get_current_objects(File, parent_dir=parent_dir)
-
-    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
-        current_directory = self.get_current_directory()
-        current_file = self.get_current_file()
-        directories = self.get_directories_to_show(current_directory)
-        files = self.get_files_to_show(current_directory)
-        sections = self.get_current_sections(current_file)
-
-        if current_file:
-            file_content = get_file_content(current_file.uploaded_file)
-
-            proving_results = FileProvingResult.objects.filter(
-                related_file=current_file,
-                validity_flag=True
-            )
-            if len(proving_results) > 0:
-                proving_result = proving_results[0]
-            else:
-                proving_result = None
-        else:
-            file_content = None
-            proving_result = None
-
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['directories'] = directories
-        context['files'] = files
-        context['current_dir'] = current_directory
-        context['current_file'] = current_file
-        context['file_content'] = file_content
-        context['sections'] = sections
-        context['proving_result'] = proving_result
+
+        context['dir_form'] = CreateDirectoryForm()
+        context['file_form'] = CreateFileForm()
 
         return context
 
 
-class FileBaseCreateView(CreateView):
-    """Base class for create view for file-based objects
-    like file or directory"""
+@login_required
+def add_file_view(request):
+    if request.method == 'POST':
+        form = CreateFileForm(data=request.POST, files=request.FILES)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
 
-    success_url = reverse_lazy('main')
+            return HttpResponse()
+        else:
+            error_message = parse_error_message(form.errors.get_json_data())
+            return HttpResponseBadRequest(error_message)
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class=form_class)
-        # Available parent dirs are only those that are user's.
-        form.fields['parent_dir'].queryset = \
-            Directory.objects.filter(
-                owner=self.request.user,
-                availability_flag=True
-            )
-
-        return form
-
-    def form_valid(self, form):
-        obj = form.save(commit=False)
-        obj.owner = self.request.user
-        obj.save()
-
-        return super().form_valid(form)
+    return HttpResponseNotAllowed(permitted_methods=['POST'])
 
 
-class CreateFileView(FileBaseCreateView):
-    form_class = CreateFileForm
-    model = File
-    template_name = 'create_file.html'
+@login_required
+def add_dir_view(request):
+    if request.method == 'POST':
+        form = CreateDirectoryForm(request.POST, user=request.user)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.owner = request.user
+            obj.save()
 
+            return HttpResponse()
+        else:
+            error_message = parse_error_message(form.errors.get_json_data())
+            return HttpResponseBadRequest(error_message)
 
-class CreateDirectoryView(FileBaseCreateView):
-    form_class = CreateDirectoryForm
-    model = Directory
-    template_name = 'create_directory.html'
-
-    def get_form_kwargs(self, *args, **kwargs):
-        form_kwargs = super().get_form_kwargs(*args, **kwargs)
-        form_kwargs['user'] = self.request.user
-
-        return form_kwargs
+    return HttpResponseNotAllowed(permitted_methods=['POST'])
 
 
 def delete_directory_recurrent(directory: Directory):
@@ -163,6 +159,7 @@ def delete_directory_recurrent(directory: Directory):
     directory.delete_by_user()
 
 
+@login_required
 def delete_directory_view(request, pk):
     directory = get_object_or_404(
         Directory,
@@ -173,14 +170,12 @@ def delete_directory_view(request, pk):
 
     if request.method == 'POST':
         delete_directory_recurrent(directory)
-        return redirect(reverse('main'))
+        return HttpResponse()
 
-    context = {
-        'directory': directory,
-    }
-    return render(request, 'delete_directory.html', context)
+    return HttpResponseNotAllowed(permitted_methods=['POST'])
 
 
+@login_required
 def delete_file_view(request, pk):
     file = get_object_or_404(
         File,
@@ -191,14 +186,13 @@ def delete_file_view(request, pk):
 
     if request.method == 'POST':
         file.delete_by_user()
-        return redirect(reverse('main'))
+        return HttpResponse()
 
-    context = {
-        'file': file,
-    }
-    return render(request, 'delete_file.html', context)
+    return HttpResponseNotAllowed(permitted_methods=['POST'])
 
 
+@login_required
+@require_http_methods(['POST'])
 def prove_file_view(request, pk):
     file = get_object_or_404(
         File,
@@ -236,5 +230,4 @@ def prove_file_view(request, pk):
         data=result_data
     )
 
-    parent_dir_pk = file.parent_dir.pk if file.parent_dir else ''
-    return redirect(reverse('main') + f'?dir={parent_dir_pk}&file={file.pk}')
+    return HttpResponse()

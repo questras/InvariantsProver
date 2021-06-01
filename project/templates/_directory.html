@@ -1,5 +1,0 @@
-<button class="file" onclick="location.href='{% url 'main' %}?dir={{ directory.pk }}'">
-    <i class="fa fa-folder"></i>
-    {{ directory.name }}
-    <a class="delete-link" href="{% url 'delete-directory' directory.pk %}"><i class="fa fa-trash"></i></a>
-</button>

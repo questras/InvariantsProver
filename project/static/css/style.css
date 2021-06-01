@@ -63,22 +63,39 @@ textarea {
 }
 
 .file {
-    padding: 5%;
     min-width: 100%;
+    background-color: var(--background-color);
+    border-bottom: var(--button-border);
+}
+
+.file-button {
+    width: 70%;
+    min-height: 100%;
+    padding: 5%;
     text-decoration: none;
     cursor: pointer;
     background-color: var(--background-color);
     border: none;
-    border-bottom: var(--button-border);
     word-wrap: break-word;
 }
 
-.file:hover {
+.file-button:hover {
     background-color: var(--hover-color);
 }
 
 .delete-link {
-    margin-left: 10%;
+    width: 25%;
+    min-height: 100%;
+    padding: 5%;
+    text-decoration: none;
+    cursor: pointer;
+    background-color: var(--background-color);
+    border: none;
+    word-wrap: break-word;
+}
+
+.delete-link:hover {
+    background-color: var(--hover-color);
 }
 
 .program-code-container {
