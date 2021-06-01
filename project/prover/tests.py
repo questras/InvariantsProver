@@ -1,6 +1,9 @@
+import os
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.conf import settings
 
 from .models import (
     Entity,
@@ -18,6 +21,31 @@ from .forms import (
 )
 
 User = get_user_model()
+
+
+def get_test_file_path() -> str:
+    filename = 'testfile.txt'
+    filepath = os.path.join(settings.BASE_DIR, 'files', 'tests', filename)
+    return filepath
+
+
+def create_dummy_file() -> str:
+    """Create a file in {static}/files/tests/ directory
+    for testing purposes."""
+
+    filepath = get_test_file_path()
+
+    f = open(filepath, 'w+')
+    f.close()
+
+    return filepath
+
+
+def delete_dummy_file():
+    """Delete a file create in `create_dummy_file`."""
+
+    filepath = get_test_file_path()
+    os.remove(filepath)
 
 
 def create_dummy_user(n: int):
@@ -53,20 +81,39 @@ class DirectoryModelTests(TestCase):
         self.directory.delete_by_user()
         self.assertEqual(self.directory.availability_flag, False)
 
+    def test_correct_str_method(self):
+        want = 'test name'
+        got = str(self.directory)
+        self.assertEqual(got, want)
+
 
 class FileModelTests(TestCase):
     def setUp(self) -> None:
         self.user = create_dummy_user(1)
         self.file = File.objects.create(
             description='test',
-            owner=self.user
+            owner=self.user,
+            uploaded_file=create_dummy_file()
         )
+
+    def tearDown(self) -> None:
+        delete_dummy_file()
 
     def test_delete_by_user_sets_availability_to_false(self):
         self.assertEqual(self.file.availability_flag, True)
 
         self.file.delete_by_user()
         self.assertEqual(self.file.availability_flag, False)
+
+    def test_get_name_gives_correct_filename(self):
+        want = get_test_file_path().split('/')[-1]
+        got = self.file.get_name()
+        self.assertEqual(got, want)
+
+    def test_correct_str_method(self):
+        want = get_test_file_path().split('/')[-1]
+        got = str(self.file)
+        self.assertEqual(got, want)
 
 
 class SectionCategoryModelTests(TestCase):
@@ -97,15 +144,19 @@ class SectionStatusDataModelTests(TestCase):
         self.status = SectionStatus.objects.create(
             name='test-status'
         )
-
-    def test_section_status_data_is_correctly_created(self):
-        data = SectionStatusData.objects.create(
+        self.status_data = SectionStatusData.objects.create(
             data='test-data',
             status=self.status
         )
 
-        self.assertEqual(data.data, 'test-data')
-        self.assertEqual(data.status.name, 'test-status')
+    def test_section_status_data_is_correctly_created(self):
+        self.assertEqual(self.status_data.data, 'test-data')
+        self.assertEqual(self.status_data.status.name, 'test-status')
+
+    def test_correct_str_method(self):
+        want = 'Status data to status: test-status'
+        got = str(self.status_data)
+        self.assertEqual(got, want)
 
 
 class FileSectionModelTests(TestCase):
@@ -132,18 +183,27 @@ class FileSectionModelTests(TestCase):
         self.assertEqual(File.objects.all().count(), 0)
         self.assertEqual(FileSection.objects.all().count(), 0)
 
+    def test_correct_str_method(self):
+        want = 'Section test-section. Status: test-status'
+        got = str(self.section)
+        self.assertEqual(got, want)
+
 
 class FileProvingResultModelTests(TestCase):
     def setUp(self) -> None:
         self.user = create_dummy_user(1)
         self.file = File.objects.create(
             owner=self.user,
-            description='test-desc'
+            description='test-desc',
+            uploaded_file=create_dummy_file()
         )
         self.proving = FileProvingResult.objects.create(
             data='test-data',
             related_file=self.file,
         )
+
+    def tearDown(self) -> None:
+        delete_dummy_file()
 
     def test_proving_result_is_deleted_when_related_file_is_deleted(self):
         # Right now, 1 file and 1 section.
@@ -154,6 +214,11 @@ class FileProvingResultModelTests(TestCase):
 
         self.assertEqual(File.objects.all().count(), 0)
         self.assertEqual(FileProvingResult.objects.all().count(), 0)
+
+    def test_correct_str_method(self):
+        want = 'Result of ' + get_test_file_path().split('/')[-1]
+        got = str(self.proving)
+        self.assertEqual(got, want)
 
 
 class CreateDirectoryFormTests(TestCase):

@@ -153,4 +153,5 @@ class FileProvingResult(Entity):
     data = models.TextField()
 
     def __str__(self) -> str:
-        return f'Result of {self.related_file.uploaded_file.name}'
+        filename = self.related_file.get_name()
+        return f'Result of {filename}'
