@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container dark-theme">
+        <!-- Menu bar -->
+        <div class="menu-bar">
+            <button class="menu-button" onclick="proveCurrentFileAndReload();">
+                Run
+            </button>
+            <button class="menu-button" onclick="showAddDirForm();">
+                New Directory
+            </button>
+            <button class="menu-button" onclick="showAddFileForm();">
+                Upload File
+            </button>
+            <button class="menu-button" onclick="showProgramCode();">
+                Show Code
+            </button>
+            <button class="menu-button" onclick="location.href='{% url 'logout' %}'">
+                Logout
+            </button>
+        </div>
+
+        <!-- File selection dialog -->
+        <div class="file-selection-dialog" id="file-selection-dialog">
+        </div>
+
+        <!-- Program code -->
+        <div class="program-code-container">
+            <!-- Textarea for code -->
+            <textarea class="code" id="program-code" wrap="soft" placeholder="Code goes here...">
+            </textarea>
+            <!-- Form to add a directory, hidden by default -->
+            <div id="add-dir-form-container" class="form-container" hidden>
+                <h2>Add a directory</h2>
+                <form id="add-dir-form" method="post" action="">
+                    {% csrf_token %}
+                    <p>
+                        {{ dir_form.name.label }}:
+                        {{ dir_form.name }}
+                    </p>
+                    <p>
+                        {{ dir_form.description.label }}:
+                        {{ dir_form.description }}
+                    </p>
+                    <input type="submit" value="Add">
+                </form>
+            </div>
+            <!-- Form to add a file, hidden by default -->
+            <div id="add-file-form-container" class="form-container" hidden>
+                <h2>Add a file</h2>
+                <form id="add-file-form" method="post" >
+                    {% csrf_token %}
+                    <p>
+                        {{ file_form.uploaded_file.label }}:
+                        {{ file_form.uploaded_file }}
+                    </p>
+                    <p>
+                        {{ file_form.description.label }}:
+                        {{ file_form.description }}
+                    </p>
+                    <input type="submit" value="Add">
+                </form>
+            </div>
+        </div>
+
+        <!-- Program elements -->
+        <div class="program-elements-container">
+            <div class="program-name" id="program-name"></div>
+            <div class="program-elements" id="program-elements"></div>
+        </div>
+
+        <!-- Tab data -->
+        <div class="tab-data-container">
+            <div class="tabs">
+                <button id="ProversTab" class="tab tab-active" onclick="changeTab('Provers')">Provers</button>
+                <button id ="VCsTab" class="tab" onclick="changeTab('VCs')">VCs</button>
+                <button id="ResultTab" class="tab" onclick="changeTab('Result')">Result</button>
+            </div>
+            <div id="ProversData" class="tab-data">
+            </div>
+            <div id="VCsData" class="tab-data" hidden>
+            </div>
+            <div id="ResultData" class="tab-data" hidden>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
