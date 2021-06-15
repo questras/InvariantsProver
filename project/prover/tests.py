@@ -31,7 +31,16 @@ User = get_user_model()
 
 def get_test_file_path() -> str:
     filename = 'testfile.txt'
-    filepath = os.path.join(settings.BASE_DIR, 'files', 'tests', filename)
+    dirpath = os.path.join(settings.BASE_DIR, 'files', 'tests')
+
+    try:
+        os.mkdir(dirpath)
+    except FileExistsError:
+        # Test directory already exists.
+        pass
+
+    filepath = os.path.join(dirpath, filename)
+
     return filepath
 
 
